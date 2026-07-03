@@ -123,15 +123,18 @@ function initChart() {
     linesGroup = g.append("g").attr("clip-path", "url(#clip-lines)");
     imagesGroup = g.append("g");
 
+    let lineElements = {};
+
     // Draw full lines once
     names.forEach(name => {
         const fullLineData = chartData.map((d, i) => ({ stepIndex: i, value: d.values[name].value }));
 
-        linesGroup.append("path")
+        lineElements[name] = linesGroup.append("path")
             .datum(fullLineData)
             .attr("class", "line")
             .attr("stroke", participants[name].color)
-            .attr("d", lineGenerator);
+            .attr("d", lineGenerator)
+            .style("cursor", "pointer");
     });
 
     // Setup images
@@ -155,6 +158,17 @@ function initChart() {
             .attr("class", "participant-label")
             .style("fill", participants[name].color)
             .text(name);
+
+        imageElements[name].style("cursor", "pointer");
+
+        // Hover interactivity to bring line and image to front
+        const bringToFront = () => {
+            lineElements[name].raise();
+            imageElements[name].raise();
+        };
+
+        lineElements[name].on("mouseover", bringToFront);
+        imageElements[name].on("mouseover", bringToFront);
     });
 
     renderStep(0, 0); // Render initial state without animation duration
