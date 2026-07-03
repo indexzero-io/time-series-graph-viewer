@@ -1,22 +1,10 @@
-// 1. Data Structure Setup
-const participants = {
-    "Alice": { imageUrl: "https://i.pravatar.cc/150?u=Alice", color: "#ff6384", initialValue: 50 },
-    "Bob": { imageUrl: "https://i.pravatar.cc/150?u=Bob", color: "#36a2eb", initialValue: 60 },
-    "Charlie": { imageUrl: "https://i.pravatar.cc/150?u=Charlie", color: "#ffce56", initialValue: 40 },
-    "Diana": { imageUrl: "https://i.pravatar.cc/150?u=Diana", color: "#4bc0c0", initialValue: 45 }
-};
+// Globals for data
+let participants;
+let timelineData;
+let chartData;
+let names;
 
-const timelineData = [
-    { timeLabel: "Week 0", changes: { "Alice": 0, "Bob": 0, "Charlie": 0, "Diana": 0 } },
-    { timeLabel: "Week 1", changes: { "Alice": 10, "Bob": -5, "Charlie": 15, "Diana": 5 } },
-    { timeLabel: "Week 2", changes: { "Alice": -15, "Bob": 10, "Diana": 20 } },
-    { timeLabel: "Week 3", changes: { "Alice": 5, "Bob": 25, "Charlie": -10 } },
-    { timeLabel: "Week 4", changes: { "Bob": -10, "Charlie": 30, "Diana": 15 } },
-    { timeLabel: "Week 5", changes: { "Alice": 20, "Bob": 5, "Charlie": -5, "Diana": -15 } },
-    { timeLabel: "Week 6", changes: { "Alice": 15, "Bob": 20, "Charlie": 10, "Diana": 5 } }
-];
-
-// 2. Data Processing
+// 1. Data Processing
 function processData(participants, timelineData) {
     const names = Object.keys(participants);
 
@@ -51,10 +39,7 @@ function processData(participants, timelineData) {
     });
 }
 
-const chartData = processData(participants, timelineData);
-const names = Object.keys(participants);
-
-// 3. Build the D3.js Chart (Dynamic Sizing)
+// 2. Build the D3.js Chart (Dynamic Sizing)
 let width, height, innerWidth, innerHeight, xScale, yScale, svg, g, xAxisGroup, yAxisGroup, gridXGroup, gridYGroup, clipRect;
 let lineGenerator;
 let linesGroup, imagesGroup;
@@ -298,4 +283,21 @@ window.addEventListener("resize", () => {
 });
 
 // Initialize on load
-initChart();
+async function loadDataAndInit() {
+    try {
+        const response = await fetch('data.json');
+        const data = await response.json();
+
+        participants = data.participants;
+        timelineData = data.timelineData;
+
+        chartData = processData(participants, timelineData);
+        names = Object.keys(participants);
+
+        initChart();
+    } catch (error) {
+        console.error("Failed to load data:", error);
+    }
+}
+
+loadDataAndInit();
