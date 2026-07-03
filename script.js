@@ -216,7 +216,7 @@ function renderStep(targetStep, duration = transitionDuration) {
             .attr("y", 5);
     });
 
-    // Update button text if reached end
+    // Auto stop if reached end
     if (currentStep >= chartData.length - 1 && isPlaying) {
         stopAnimation();
     }
@@ -236,8 +236,6 @@ function startAnimation() {
         renderStep(0, 0); // instantly reset
     }
     isPlaying = true;
-    document.getElementById("start-btn").innerText = "Pause Animation";
-    document.getElementById("start-btn").style.backgroundColor = "#ff9800"; // Orange for pause
 
     // Start after slight delay if we just reset
     setTimeout(() => {
@@ -248,21 +246,18 @@ function startAnimation() {
 function stopAnimation() {
     isPlaying = false;
     clearTimeout(animationTimeout);
-    document.getElementById("start-btn").innerText = currentStep >= chartData.length - 1 ? "Restart Animation" : "Resume Animation";
-    document.getElementById("start-btn").style.backgroundColor = "#4CAF50"; // Green for start
 }
 
 // 4. Event Listeners
-document.getElementById("start-btn").addEventListener("click", () => {
-    if (isPlaying) {
-        stopAnimation();
-    } else {
-        startAnimation();
-    }
-});
-
 window.addEventListener("keydown", (e) => {
-    if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+    if (e.code === "Space") {
+        e.preventDefault(); // Prevent default page scroll
+        if (isPlaying) {
+            stopAnimation();
+        } else {
+            startAnimation();
+        }
+    } else if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
         if (isPlaying) stopAnimation();
 
         if (e.key === "ArrowLeft" && currentStep > 0) {
