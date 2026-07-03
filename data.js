@@ -1,4 +1,4 @@
-{
+const chartDataConfig = {
   "participants": {
     "Alice": { "imageUrl": "https://i.pravatar.cc/150?u=Alice", "color": "#ff6384", "initialValue": 50 },
     "Bob": { "imageUrl": "https://i.pravatar.cc/150?u=Bob", "color": "#36a2eb", "initialValue": 60 },
@@ -14,4 +14,4 @@
     { "timeLabel": "Week 5", "changes": { "Alice": 20, "Bob": 5, "Charlie": -5, "Diana": -15 } },
     { "timeLabel": "Week 6", "changes": { "Alice": 15, "Bob": 20, "Charlie": 10, "Diana": 5 } }
   ]
-}
+};

@@ -278,21 +278,14 @@ window.addEventListener("resize", () => {
 });
 
 // Initialize on load
-async function loadDataAndInit() {
-    try {
-        const response = await fetch('data.json');
-        const data = await response.json();
+function loadDataAndInit() {
+    participants = chartDataConfig.participants;
+    timelineData = chartDataConfig.timelineData;
 
-        participants = data.participants;
-        timelineData = data.timelineData;
+    chartData = processData(participants, timelineData);
+    names = Object.keys(participants);
 
-        chartData = processData(participants, timelineData);
-        names = Object.keys(participants);
-
-        initChart();
-    } catch (error) {
-        console.error("Failed to load data:", error);
-    }
+    initChart();
 }
 
 loadDataAndInit();

@@ -7,30 +7,6 @@ body {
     overflow: hidden; /* Prevent scrollbars for full screen */
 }
 
-.overlay {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    z-index: 10;
-    background-color: rgba(30, 30, 30, 0.8);
-    padding: 15px 25px;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
-}
-
-h1 {
-    font-size: 20px;
-    margin-top: 0;
-    margin-bottom: 15px;
-}
-
-.hotkeys-info {
-    font-size: 12px;
-    color: #b0b0b0;
-    margin-top: 15px;
-    margin-bottom: 0;
-}
-
 #chart-container {
     width: 100vw;
     height: 100vh;
