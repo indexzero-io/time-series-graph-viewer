@@ -1,25 +1,9 @@
 // 1. Data Structure Setup
 const participants = {
-    "Alice": {
-        imageUrl: "https://i.pravatar.cc/150?u=Alice",
-        color: "#ff6384",
-        initialValue: 50
-    },
-    "Bob": {
-        imageUrl: "https://i.pravatar.cc/150?u=Bob",
-        color: "#36a2eb",
-        initialValue: 60
-    },
-    "Charlie": {
-        imageUrl: "https://i.pravatar.cc/150?u=Charlie",
-        color: "#ffce56",
-        initialValue: 40
-    },
-    "Diana": {
-        imageUrl: "https://i.pravatar.cc/150?u=Diana",
-        color: "#4bc0c0",
-        initialValue: 45
-    }
+    "Alice": { imageUrl: "https://i.pravatar.cc/150?u=Alice", color: "#ff6384", initialValue: 50 },
+    "Bob": { imageUrl: "https://i.pravatar.cc/150?u=Bob", color: "#36a2eb", initialValue: 60 },
+    "Charlie": { imageUrl: "https://i.pravatar.cc/150?u=Charlie", color: "#ffce56", initialValue: 40 },
+    "Diana": { imageUrl: "https://i.pravatar.cc/150?u=Diana", color: "#4bc0c0", initialValue: 45 }
 };
 
 const timelineData = [
@@ -55,7 +39,7 @@ function processData(participants, timelineData) {
         names.forEach(name => {
             valuesForStep[name] = {
                 value: currentValues[name],
-                rank: rankMap[name]
+                rank: rankMap[name] // 0 is 1st place, 1 is 2nd place, etc.
             };
         });
 
@@ -70,177 +54,248 @@ function processData(participants, timelineData) {
 const chartData = processData(participants, timelineData);
 const names = Object.keys(participants);
 
-// 3. Build the D3.js Chart
-const width = 800;
-const height = 500;
-const margin = { top: 40, right: 100, bottom: 40, left: 60 };
-const innerWidth = width - margin.left - margin.right;
-const innerHeight = height - margin.top - margin.bottom;
-
-const svg = d3.select("#chart-container")
-    .append("svg")
-    .attr("width", width)
-    .attr("height", height);
-
-const g = svg.append("g")
-    .attr("transform", `translate(${margin.left},${margin.top})`);
-
-const xScale = d3.scaleLinear()
-    .domain([0, chartData.length - 1])
-    .range([0, innerWidth]);
-
-let minVal = Infinity;
-let maxVal = -Infinity;
-chartData.forEach(d => {
-    names.forEach(name => {
-        if (d.values[name].value < minVal) minVal = d.values[name].value;
-        if (d.values[name].value > maxVal) maxVal = d.values[name].value;
-    });
-});
-
-const yScale = d3.scaleLinear()
-    .domain([minVal - 10, maxVal + 10])
-    .range([innerHeight, 0]);
-
-const xAxis = d3.axisBottom(xScale)
-    .ticks(chartData.length)
-    .tickFormat(i => chartData[i] ? chartData[i].timeLabel : "");
-
-const yAxis = d3.axisLeft(yScale);
-
-g.append("g")
-    .attr("class", "grid")
-    .attr("transform", `translate(0,${innerHeight})`)
-    .call(d3.axisBottom(xScale).ticks(chartData.length).tickSize(-innerHeight).tickFormat(''))
-    .selectAll(".tick line").classed("grid-line", true);
-
-g.append("g")
-    .attr("class", "grid")
-    .call(d3.axisLeft(yScale).tickSize(-innerWidth).tickFormat(''))
-    .selectAll(".tick line").classed("grid-line", true);
-
-g.append("g")
-    .attr("transform", `translate(0,${innerHeight})`)
-    .call(xAxis)
-    .selectAll("text").classed("axis-text", true);
-
-g.append("g")
-    .call(yAxis)
-    .selectAll("text").classed("axis-text", true);
-
-g.selectAll(".domain").classed("axis-line", true);
-
-// 4. Implement Animations
-const lineGenerator = d3.line()
-    .x(d => xScale(d.stepIndex))
-    .y(d => yScale(d.value))
-    .curve(d3.curveMonotoneX); // Smooth curves
-
-// Create groups for lines and images
-const linesGroup = g.append("g").attr("class", "lines");
-const imagesGroup = g.append("g").attr("class", "images");
-
-let lines = {};
+// 3. Build the D3.js Chart (Dynamic Sizing)
+let width, height, innerWidth, innerHeight, xScale, yScale, svg, g, xAxisGroup, yAxisGroup, gridXGroup, gridYGroup, clipRect;
+let lineGenerator;
+let linesGroup, imagesGroup;
 let imageElements = {};
+let imageCircles = {};
+let labelElements = {};
+
+// Sizing configuration
+const margin = { top: 60, right: 120, bottom: 60, left: 80 };
+const transitionDuration = 800; // slightly faster for hotkeys
+
+// Playback state
 let currentStep = 0;
+let isPlaying = false;
+let animationTimeout;
 
-// Setup initial state (Step 0)
-names.forEach(name => {
-    const dataForLine = [ { stepIndex: 0, value: chartData[0].values[name].value } ];
+// Rank sizes
+const getRankSize = (rank) => {
+    if (rank === 0) return 30; // 1st place radius
+    if (rank === 1) return 24; // 2nd place radius
+    if (rank === 2) return 18; // 3rd place radius
+    return 14;                 // default radius
+};
 
-    // Draw initial lines
-    lines[name] = linesGroup.append("path")
-        .datum(dataForLine)
-        .attr("class", "line")
-        .attr("stroke", participants[name].color)
-        .attr("d", lineGenerator);
+function initChart() {
+    d3.select("#chart-container").selectAll("*").remove();
 
-    // Add initial images
-    imageElements[name] = imagesGroup.append("g")
-        .attr("transform", `translate(${xScale(0)}, ${yScale(chartData[0].values[name].value)})`);
+    width = window.innerWidth;
+    height = window.innerHeight;
+    innerWidth = width - margin.left - margin.right;
+    innerHeight = height - margin.top - margin.bottom;
 
-    // Define clip path to make images circular
+    svg = d3.select("#chart-container")
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height);
+
+    g = svg.append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    // Define clip path to hide lines ahead of current step
     const defs = svg.append("defs");
-    defs.append("clipPath")
-        .attr("id", `clip-circle-${name}`)
-        .append("circle")
-        .attr("r", 15)
-        .attr("cx", 0)
-        .attr("cy", 0);
+    clipRect = defs.append("clipPath")
+        .attr("id", "clip-lines")
+        .append("rect")
+        .attr("x", 0)
+        .attr("y", -margin.top)
+        .attr("width", 0) // starts at 0 width
+        .attr("height", height);
 
-    // Append image
-    imageElements[name].append("image")
-        .attr("href", participants[name].imageUrl)
-        .attr("x", -15)
-        .attr("y", -15)
-        .attr("width", 30)
-        .attr("height", 30)
-        .attr("clip-path", `url(#clip-circle-${name})`);
+    xScale = d3.scaleLinear()
+        .domain([0, chartData.length - 1])
+        .range([0, innerWidth]);
 
-    // Append label
-    imageElements[name].append("text")
-        .attr("x", 20)
-        .attr("y", 4)
-        .attr("class", "participant-label")
-        .style("fill", participants[name].color)
-        .text(name);
-});
-
-const transitionDuration = 1000;
-
-function animateNextStep() {
-    if (currentStep >= chartData.length - 1) {
-        document.getElementById("start-btn").disabled = false;
-        return; // Animation finished
-    }
-
-    currentStep++;
-
-    names.forEach(name => {
-        // Build data array for the line up to the current step
-        const lineDataArray = [];
-        for (let i = 0; i <= currentStep; i++) {
-            lineDataArray.push({
-                stepIndex: i,
-                value: chartData[i].values[name].value
-            });
-        }
-
-        // Animate Line drawing
-        lines[name].datum(lineDataArray)
-            .transition()
-            .duration(transitionDuration)
-            .ease(d3.easeLinear)
-            .attr("d", lineGenerator);
-
-        // Animate Image Moving
-        const endX = xScale(currentStep);
-        const endY = yScale(chartData[currentStep].values[name].value);
-
-        imageElements[name]
-            .transition()
-            .duration(transitionDuration)
-            .ease(d3.easeLinear)
-            .attr("transform", `translate(${endX}, ${endY})`);
+    let minVal = Infinity, maxVal = -Infinity;
+    chartData.forEach(d => {
+        names.forEach(name => {
+            if (d.values[name].value < minVal) minVal = d.values[name].value;
+            if (d.values[name].value > maxVal) maxVal = d.values[name].value;
+        });
     });
 
-    // Schedule next step
-    setTimeout(animateNextStep, transitionDuration);
+    yScale = d3.scaleLinear()
+        .domain([minVal - 10, maxVal + 10])
+        .range([innerHeight, 0]);
+
+    // Axes & Grid
+    xAxisGroup = g.append("g").attr("class", "x-axis").attr("transform", `translate(0,${innerHeight})`);
+    yAxisGroup = g.append("g").attr("class", "y-axis");
+    gridXGroup = g.append("g").attr("class", "grid grid-x").attr("transform", `translate(0,${innerHeight})`);
+    gridYGroup = g.append("g").attr("class", "grid grid-y");
+
+    updateAxes();
+
+    lineGenerator = d3.line()
+        .x(d => xScale(d.stepIndex))
+        .y(d => yScale(d.value))
+        .curve(d3.curveMonotoneX);
+
+    // Group for lines with clip-path
+    linesGroup = g.append("g").attr("clip-path", "url(#clip-lines)");
+    imagesGroup = g.append("g");
+
+    // Draw full lines once
+    names.forEach(name => {
+        const fullLineData = chartData.map((d, i) => ({ stepIndex: i, value: d.values[name].value }));
+
+        linesGroup.append("path")
+            .datum(fullLineData)
+            .attr("class", "line")
+            .attr("stroke", participants[name].color)
+            .attr("d", lineGenerator);
+    });
+
+    // Setup images
+    names.forEach(name => {
+        imageElements[name] = imagesGroup.append("g");
+
+        // Define clip path for circular avatar
+        defs.append("clipPath")
+            .attr("id", `clip-circle-${name}`)
+            .append("circle")
+            .attr("class", "avatar-clip")
+            .attr("r", getRankSize(chartData[0].values[name].rank))
+            .attr("cx", 0)
+            .attr("cy", 0);
+
+        imageCircles[name] = imageElements[name].append("image")
+            .attr("href", participants[name].imageUrl)
+            .attr("clip-path", `url(#clip-circle-${name})`);
+
+        labelElements[name] = imageElements[name].append("text")
+            .attr("class", "participant-label")
+            .style("fill", participants[name].color)
+            .text(name);
+    });
+
+    renderStep(0, 0); // Render initial state without animation duration
 }
 
-document.getElementById("start-btn").addEventListener("click", () => {
-    document.getElementById("start-btn").disabled = true;
+function updateAxes() {
+    const xAxis = d3.axisBottom(xScale).ticks(chartData.length).tickFormat(i => chartData[i] ? chartData[i].timeLabel : "");
+    const yAxis = d3.axisLeft(yScale);
 
-    // Reset if already finished
-    if (currentStep >= chartData.length - 1) {
-        currentStep = 0;
-        names.forEach(name => {
-            const dataForLine = [ { stepIndex: 0, value: chartData[0].values[name].value } ];
-            lines[name].datum(dataForLine).attr("d", lineGenerator);
-            imageElements[name].attr("transform", `translate(${xScale(0)}, ${yScale(chartData[0].values[name].value)})`);
-        });
+    gridXGroup.call(d3.axisBottom(xScale).ticks(chartData.length).tickSize(-innerHeight).tickFormat(''))
+        .selectAll(".tick line").classed("grid-line", true);
+    gridYGroup.call(d3.axisLeft(yScale).tickSize(-innerWidth).tickFormat(''))
+        .selectAll(".tick line").classed("grid-line", true);
+
+    xAxisGroup.call(xAxis).selectAll("text").classed("axis-text", true);
+    yAxisGroup.call(yAxis).selectAll("text").classed("axis-text", true);
+    g.selectAll(".domain").classed("axis-line", true);
+}
+
+function renderStep(targetStep, duration = transitionDuration) {
+    currentStep = targetStep;
+    const targetX = xScale(currentStep);
+
+    // Animate the clip rect width to reveal the lines precisely
+    clipRect.transition()
+        .duration(duration)
+        .ease(d3.easeLinear)
+        .attr("width", targetX);
+
+    // Animate avatars and labels
+    names.forEach(name => {
+        const val = chartData[currentStep].values[name].value;
+        const rank = chartData[currentStep].values[name].rank;
+        const targetY = yScale(val);
+        const radius = getRankSize(rank);
+
+        // Move group
+        imageElements[name].transition()
+            .duration(duration)
+            .ease(d3.easeLinear)
+            .attr("transform", `translate(${targetX}, ${targetY})`);
+
+        // Scale image and clip circle
+        d3.select(`#clip-circle-${name} circle`).transition()
+            .duration(duration)
+            .attr("r", radius);
+
+        imageCircles[name].transition()
+            .duration(duration)
+            .attr("x", -radius)
+            .attr("y", -radius)
+            .attr("width", radius * 2)
+            .attr("height", radius * 2);
+
+        // Move label
+        labelElements[name].transition()
+            .duration(duration)
+            .attr("x", radius + 8)
+            .attr("y", 5);
+    });
+
+    // Update button text if reached end
+    if (currentStep >= chartData.length - 1 && isPlaying) {
+        stopAnimation();
     }
+}
 
-    // Start animation
-    animateNextStep();
+function playNextStep() {
+    if (currentStep < chartData.length - 1) {
+        renderStep(currentStep + 1);
+        animationTimeout = setTimeout(playNextStep, transitionDuration);
+    } else {
+        stopAnimation();
+    }
+}
+
+function startAnimation() {
+    if (currentStep >= chartData.length - 1) {
+        renderStep(0, 0); // instantly reset
+    }
+    isPlaying = true;
+    document.getElementById("start-btn").innerText = "Pause Animation";
+    document.getElementById("start-btn").style.backgroundColor = "#ff9800"; // Orange for pause
+
+    // Start after slight delay if we just reset
+    setTimeout(() => {
+        if (isPlaying) playNextStep();
+    }, 50);
+}
+
+function stopAnimation() {
+    isPlaying = false;
+    clearTimeout(animationTimeout);
+    document.getElementById("start-btn").innerText = currentStep >= chartData.length - 1 ? "Restart Animation" : "Resume Animation";
+    document.getElementById("start-btn").style.backgroundColor = "#4CAF50"; // Green for start
+}
+
+// 4. Event Listeners
+document.getElementById("start-btn").addEventListener("click", () => {
+    if (isPlaying) {
+        stopAnimation();
+    } else {
+        startAnimation();
+    }
 });
+
+window.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+        if (isPlaying) stopAnimation();
+
+        if (e.key === "ArrowLeft" && currentStep > 0) {
+            renderStep(currentStep - 1, transitionDuration / 2); // faster manual stepping
+        } else if (e.key === "ArrowRight" && currentStep < chartData.length - 1) {
+            renderStep(currentStep + 1, transitionDuration / 2);
+        }
+    }
+});
+
+// 5. Window Resize handling
+window.addEventListener("resize", () => {
+    if (animationTimeout) clearTimeout(animationTimeout);
+    const savedStep = currentStep; // Save current step before initChart resets it
+    initChart();
+    renderStep(savedStep, 0); // re-render at current step instantly
+    if (isPlaying) playNextStep();
+});
+
+// Initialize on load
+initChart();
