@@ -184,6 +184,25 @@ function updateAxes() {
         .selectAll(".tick line").classed("grid-line", true);
 
     xAxisGroup.call(xAxis).selectAll("text").classed("axis-text", true);
+
+    // Handle line breaks \n in X axis labels
+    xAxisGroup.selectAll(".tick text").each(function() {
+        const el = d3.select(this);
+        // Handle both actual newlines and escaped newlines
+        const textContent = el.text();
+        const lines = textContent.includes("\\n") ? textContent.split("\\n") : textContent.split("\n");
+        if (lines.length > 1) {
+            el.text(""); // Clear existing text
+            lines.forEach((line, i) => {
+                el.append("tspan")
+                  .attr("x", 0)
+                  .attr("y", 9)
+                  .attr("dy", `${i * 1.2}em`)
+                  .text(line);
+            });
+        }
+    });
+
     yAxisGroup.call(yAxis).selectAll("text").classed("axis-text", true);
     g.selectAll(".domain").classed("axis-line", true);
 }
