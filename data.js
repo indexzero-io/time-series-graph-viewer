@@ -1,17 +1,122 @@
 const chartDataConfig = {
   "participants": {
-    "Alice": { "imageUrl": "https://i.pravatar.cc/150?u=Alice", "color": "#ff6384", "initialValue": 50 },
-    "Bob": { "imageUrl": "https://i.pravatar.cc/150?u=Bob", "color": "#36a2eb", "initialValue": 60 },
-    "Charlie": { "imageUrl": "https://i.pravatar.cc/150?u=Charlie", "color": "#ffce56", "initialValue": 40 },
-    "Diana": { "imageUrl": "https://i.pravatar.cc/150?u=Diana", "color": "#4bc0c0", "initialValue": 45 }
+    "Hugo Palomares": { "imageUrl": "https://i.pravatar.cc/150?u=Hugo+Palomares", "color": "#FF5733", "initialValue": 0 },
+    "Vanesa Castillo": { "imageUrl": "https://i.pravatar.cc/150?u=Vanesa+Castillo", "color": "#33FF57", "initialValue": 0 },
+    "Jose Carvajal": { "imageUrl": "https://i.pravatar.cc/150?u=Jose+Carvajal", "color": "#3357FF", "initialValue": 0 },
+    "Cristina Bobadilla": { "imageUrl": "https://i.pravatar.cc/150?u=Cristina+Bobadilla", "color": "#FF33A8", "initialValue": 0 },
+    "joaco": { "imageUrl": "https://i.pravatar.cc/150?u=joaco", "color": "#33FFF5", "initialValue": 0 },
+    "René Aldrette": { "imageUrl": "https://i.pravatar.cc/150?u=Rene+Aldrette", "color": "#F5FF33", "initialValue": 0 },
+    "Oscar Cortes": { "imageUrl": "https://i.pravatar.cc/150?u=Oscar+Cortes", "color": "#A833FF", "initialValue": 0 },
+    "Majo cano garcia": { "imageUrl": "https://i.pravatar.cc/150?u=Majo+cano+garcia", "color": "#FF8F33", "initialValue": 0 },
+    "Luis Mariano Montemayor": { "imageUrl": "https://i.pravatar.cc/150?u=Luis+Mariano+Montemayor", "color": "#8FFF33", "initialValue": 0 },
+    "Paulina Rodríguez": { "imageUrl": "https://i.pravatar.cc/150?u=Paulina+Rodriguez", "color": "#338FFF", "initialValue": 0 },
+    "Cesar": { "imageUrl": "https://i.pravatar.cc/150?u=Cesar", "color": "#FF3333", "initialValue": 0 },
+    "Andy Quijano": { "imageUrl": "https://i.pravatar.cc/150?u=Andy+Quijano", "color": "#33FF8F", "initialValue": 0 },
+    "Vanessa Welsh": { "imageUrl": "https://i.pravatar.cc/150?u=Vanessa+Welsh", "color": "#8F33FF", "initialValue": 0 },
+    "Dana Tellez": { "imageUrl": "https://i.pravatar.cc/150?u=Dana+Tellez", "color": "#FF338F", "initialValue": 0 }
   },
   "timelineData": [
-    { "timeLabel": "Week 0", "changes": { "Alice": 0, "Bob": 0, "Charlie": 0, "Diana": 0 } },
-    { "timeLabel": "Week 1", "changes": { "Alice": 10, "Bob": -5, "Charlie": 15, "Diana": 5 } },
-    { "timeLabel": "Week 2\n(Bonus)", "changes": { "Alice": -15, "Bob": 10, "Diana": 20 } },
-    { "timeLabel": "Week 3", "changes": { "Alice": 5, "Bob": 25, "Charlie": -10 } },
-    { "timeLabel": "Week 4\n(Penalty)", "changes": { "Bob": -10, "Charlie": 30, "Diana": 15 } },
-    { "timeLabel": "Week 5", "changes": { "Alice": 20, "Bob": 5, "Charlie": -5, "Diana": -15 } },
-    { "timeLabel": "Week 6", "changes": { "Alice": 15, "Bob": 20, "Charlie": 10, "Diana": 5 } }
+    {
+      "timeLabel": "Start",
+      "changes": {
+        "Hugo Palomares": 0, "Vanesa Castillo": 0, "Jose Carvajal": 0, "Cristina Bobadilla": 0, "joaco": 0, "René Aldrette": 0, "Oscar Cortes": 0, "Majo cano garcia": 0, "Luis Mariano Montemayor": 0, "Paulina Rodríguez": 0, "Cesar": 0, "Andy Quijano": 0, "Vanessa Welsh": 0, "Dana Tellez": 0
+      }
+    },
+    {
+      "timeLabel": "🇲🇽\nvs\n🇿🇦",
+      "changes": { "Hugo Palomares": 0, "Vanesa Castillo": 0, "Jose Carvajal": 0, "Cristina Bobadilla": 0, "joaco": 0, "René Aldrette": 0, "Oscar Cortes": 0, "Majo cano garcia": 0, "Luis Mariano Montemayor": 0, "Paulina Rodríguez": 0, "Cesar": 0, "Andy Quijano": 0, "Vanessa Welsh": 0, "Dana Tellez": 0 }
+    },
+    {
+      "timeLabel": "🇰🇷\nvs\n🇨🇿",
+    },
+    {
+      "timeLabel": "🇨🇦\nvs\n🇧🇦",
+      "changes": { "Hugo Palomares": 3, "Vanesa Castillo": 3, "Jose Carvajal": 0, "Cristina Bobadilla": 0, "joaco": 0, "René Aldrette": 0, "Oscar Cortes": 0, "Majo cano garcia": 0, "Luis Mariano Montemayor": 0, "Paulina Rodríguez": 0, "Cesar": 0, "Andy Quijano": 0, "Vanessa Welsh": 0, "Dana Tellez": 0 }
+    },
+    {
+      "timeLabel": "🇺🇸\nvs\n🇵🇾",
+
+      "changes": { "Hugo Palomares": 1, "Vanesa Castillo": 1, "Jose Carvajal": 1, "Cristina Bobadilla": 1, "joaco": 1, "René Aldrette": 1, "Oscar Cortes": 0, "Majo cano garcia": 0, "Luis Mariano Montemayor": 1, "Paulina Rodríguez": 0, "Cesar": 0, "Andy Quijano": 1, "Vanessa Welsh": 0, "Dana Tellez": 1 }
+    },
+    {
+      "timeLabel": "🇶🇦\nvs\n🇨🇭",
+      "changes": { "Hugo Palomares": 0, "Vanesa Castillo": 0, "Jose Carvajal": 3, "Cristina Bobadilla": 3, "joaco": 3, "René Aldrette": 0, "Oscar Cortes": 0, "Majo cano garcia": 0, "Luis Mariano Montemayor": 0, "Paulina Rodríguez": 0, "Cesar": 0, "Andy Quijano": 0, "Vanessa Welsh": 0, "Dana Tellez": 0 }
+    },
+    {
+      "timeLabel": "🇧🇷\nvs\n🇲🇦",
+      "changes": { "Hugo Palomares": 0, "Vanesa Castillo": 3, "Jose Carvajal": 1, "Cristina Bobadilla": 0, "joaco": 0, "René Aldrette": 0, "Oscar Cortes": 0, "Majo cano garcia": 0, "Luis Mariano Montemayor": 0, "Paulina Rodríguez": 0, "Cesar": 0, "Andy Quijano": 0, "Vanessa Welsh": 1, "Dana Tellez": 0 }
+    },
+    {
+      "timeLabel": "🇭🇹\nvs\n🏴󠁧󠁢󠁳󠁣󠁴󠁿",
+      "changes": { "Hugo Palomares": 1, "Vanesa Castillo": 0, "Jose Carvajal": 1, "Cristina Bobadilla": 3, "joaco": 3, "René Aldrette": 3, "Oscar Cortes": 1, "Majo cano garcia": 3, "Luis Mariano Montemayor": 1, "Paulina Rodríguez": 3, "Cesar": 1, "Andy Quijano": 0, "Vanessa Welsh": 1, "Dana Tellez": 1 }
+    },
+    {
+      "timeLabel": "🇦🇺\nvs\n🇹🇷",
+      "changes": { "Hugo Palomares": 0, "Vanesa Castillo": 0, "Jose Carvajal": 0, "Cristina Bobadilla": 0, "joaco": 0, "René Aldrette": 0, "Oscar Cortes": 1, "Majo cano garcia": 0, "Luis Mariano Montemayor": 1, "Paulina Rodríguez": 0, "Cesar": 0, "Andy Quijano": 0, "Vanessa Welsh": 0, "Dana Tellez": 0 }
+    },
+    {
+      "timeLabel": "🇩🇪\nvs\n🇨🇼",
+      "changes": { "Hugo Palomares": 1, "Vanesa Castillo": 1, "Jose Carvajal": 1, "Cristina Bobadilla": 1, "joaco": 1, "René Aldrette": 1, "Oscar Cortes": 1, "Majo cano garcia": 0, "Luis Mariano Montemayor": 1, "Paulina Rodríguez": 1, "Cesar": 1, "Andy Quijano": 1, "Vanessa Welsh": 1, "Dana Tellez": 1 }
+    },
+    {
+      "timeLabel": "🇳🇱\nvs\n🇯🇵",
+      "changes": { "Hugo Palomares": 3, "Vanesa Castillo": 0, "Jose Carvajal": 1, "Cristina Bobadilla": 0, "joaco": 0, "René Aldrette": 0, "Oscar Cortes": 1, "Majo cano garcia": 0, "Luis Mariano Montemayor": 0, "Paulina Rodríguez": 0, "Cesar": 3, "Andy Quijano": 0, "Vanessa Welsh": 1, "Dana Tellez": 0 }
+    },
+    {
+      "timeLabel": "🇮🇪\nvs\n🇪🇨",
+      "changes": { "Hugo Palomares": 0, "Vanesa Castillo": 0, "Jose Carvajal": 0, "Cristina Bobadilla": 0, "joaco": 0, "René Aldrette": 0, "Oscar Cortes": 1, "Majo cano garcia": 0, "Luis Mariano Montemayor": 0, "Paulina Rodríguez": 0, "Cesar": 0, "Andy Quijano": 0, "Vanessa Welsh": 0, "Dana Tellez": 0 }
+    },
+    {
+      "timeLabel": "🇪🇸\nvs\n🇨🇻",
+      "changes": { "Hugo Palomares": 1, "Vanesa Castillo": 1, "Jose Carvajal": 1, "Cristina Bobadilla": 0, "joaco": 0, "René Aldrette": 1, "Oscar Cortes": 1, "Majo cano garcia": 1, "Luis Mariano Montemayor": 1, "Paulina Rodríguez": 1, "Cesar": 1, "Andy Quijano": 1, "Vanessa Welsh": 1, "Dana Tellez": 1 }
+    },
+    {
+      "timeLabel": "🇧🇪\nvs\n🇪🇬",
+      "changes": { "Hugo Palomares": 0, "Vanesa Castillo": 0, "Jose Carvajal": 0, "Cristina Bobadilla": 3, "joaco": 0, "René Aldrette": 0, "Oscar Cortes": 0, "Majo cano garcia": 0, "Luis Mariano Montemayor": 0, "Paulina Rodríguez": 0, "Cesar": 0, "Andy Quijano": 0, "Vanessa Welsh": 0, "Dana Tellez": 0 }
+    },
+    {
+      "timeLabel": "🇸🇦\nvs\n🇺🇾",
+      "changes": { "Hugo Palomares": 0, "Vanesa Castillo": 0, "Jose Carvajal": 0, "Cristina Bobadilla": 1, "joaco": 0, "René Aldrette": 0, "Oscar Cortes": 0, "Majo cano garcia": 0, "Luis Mariano Montemayor": 0, "Paulina Rodríguez": 0, "Cesar": 0, "Andy Quijano": 1, "Vanessa Welsh": 0, "Dana Tellez": 0 }
+    },
+    {
+      "timeLabel": "🇮🇷\nvs\n🇳🇿",
+      "changes": { "Hugo Palomares": 0, "Vanesa Castillo": 0, "Jose Carvajal": 0, "Cristina Bobadilla": 1, "joaco": 0, "René Aldrette": 0, "Oscar Cortes": 0, "Majo cano garcia": 1, "Luis Mariano Montemayor": 0, "Paulina Rodríguez": 0, "Cesar": 0, "Andy Quijano": 0, "Vanessa Welsh": 0, "Dana Tellez": 0 }
+    },
+    {
+      "timeLabel": "🇫🇷\nvs\n🇸🇳",
+      "changes": { "Hugo Palomares": 1, "Vanesa Castillo": 0, "Jose Carvajal": 1, "Cristina Bobadilla": 1, "joaco": 0, "René Aldrette": 0, "Oscar Cortes": 0, "Majo cano garcia": 0, "Luis Mariano Montemayor": 0, "Paulina Rodríguez": 1, "Cesar": 1, "Andy Quijano": 0, "Vanessa Welsh": 0, "Dana Tellez": 0 }
+    },
+    {
+      "timeLabel": "🇮🇶\nvs\n🇳🇴",
+      "changes": { "Hugo Palomares": 3, "Vanesa Castillo": 3, "Jose Carvajal": 1, "Cristina Bobadilla": 0, "joaco": 1, "René Aldrette": 1, "Oscar Cortes": 1, "Majo cano garcia": 1, "Luis Mariano Montemayor": 1, "Paulina Rodríguez": 1, "Cesar": 1, "Andy Quijano": 3, "Vanessa Welsh": 3, "Dana Tellez": 1 }
+    },
+    {
+      "timeLabel": "🇦🇷\nvs\n🇩🇿",
+      "changes": { "Hugo Palomares": 1, "Vanesa Castillo": 1, "Jose Carvajal": 1, "Cristina Bobadilla": 0, "joaco": 1, "René Aldrette": 1, "Oscar Cortes": 1, "Majo cano garcia": 1, "Luis Mariano Montemayor": 1, "Paulina Rodríguez": 1, "Cesar": 1, "Andy Quijano": 1, "Vanessa Welsh": 0, "Dana Tellez": 1 }
+    },
+    {
+      "timeLabel": "🇦🇹\nvs\n🇩🇿",
+      "changes": { "Hugo Palomares": 3, "Vanesa Castillo": 1, "Jose Carvajal": 3, "Cristina Bobadilla": 0, "joaco": 1, "René Aldrette": 3, "Oscar Cortes": 3, "Majo cano garcia": 1, "Luis Mariano Montemayor": 3, "Paulina Rodríguez": 1, "Cesar": 1, "Andy Quijano": 1, "Vanessa Welsh": 1, "Dana Tellez": 1 }
+    },
+    {
+      "timeLabel": "🇦🇹\nvs\n🇯🇴",
+      "changes": { "Hugo Palomares": 1, "Vanesa Castillo": 0, "Jose Carvajal": 1, "Cristina Bobadilla": 0, "joaco": 0, "René Aldrette": 1, "Oscar Cortes": 1, "Majo cano garcia": 3, "Luis Mariano Montemayor": 1, "Paulina Rodríguez": 1, "Cesar": 0, "Andy Quijano": 0, "Vanessa Welsh": 0, "Dana Tellez": 0 }
+    },
+    {
+      "timeLabel": "🇵🇹\nvs\n🇨🇩",
+      "changes": { "Hugo Palomares": 0, "Vanesa Castillo": 0, "Jose Carvajal": 0, "Cristina Bobadilla": 0, "joaco": 0, "René Aldrette": 0, "Oscar Cortes": 0, "Majo cano garcia": 0, "Luis Mariano Montemayor": 0, "Paulina Rodríguez": 0, "Cesar": 0, "Andy Quijano": 0, "Vanessa Welsh": 0, "Dana Tellez": 0 }
+    },
+    {
+      "timeLabel": "🇵🇹\nvs\n🇨🇩",
+      "changes": { "Hugo Palomares": 0, "Vanesa Castillo": 1, "Jose Carvajal": 1, "Cristina Bobadilla": 0, "joaco": 1, "René Aldrette": 0, "Oscar Cortes": 1, "Majo cano garcia": 1, "Luis Mariano Montemayor": 1, "Paulina Rodríguez": 1, "Cesar": 0, "Andy Quijano": 1, "Vanessa Welsh": 1, "Dana Tellez": 1 }
+    },
+    {
+      "timeLabel": "🇬🇭\nvs\n🇵🇦",
+      "changes": { "Hugo Palomares": 1, "Vanesa Castillo": 3, "Jose Carvajal": 0, "Cristina Bobadilla": 0, "joaco": 0, "René Aldrette": 1, "Oscar Cortes": 0, "Majo cano garcia": 0, "Luis Mariano Montemayor": 0, "Paulina Rodríguez": 1, "Cesar": 1, "Andy Quijano": 0, "Vanessa Welsh": 0, "Dana Tellez": 1 }
+    },
+    {
+      "timeLabel": "🇺🇿\nvs\n🇨🇴",
+      "changes": { "Hugo Palomares": 1, "Vanesa Castillo": 1, "Jose Carvajal": 1, "Cristina Bobadilla": 1, "joaco": 3, "René Aldrette": 1, "Oscar Cortes": 1, "Majo cano garcia": 1, "Luis Mariano Montemayor": 1, "Paulina Rodríguez": 1, "Cesar": 1, "Andy Quijano": 1, "Vanessa Welsh": 1, "Dana Tellez": 1 }
+    }
   ]
 };
