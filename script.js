@@ -157,6 +157,7 @@ function initChart() {
         labelElements[name] = imageElements[name].append("text")
             .attr("class", "participant-label")
             .style("fill", participants[name].color)
+            .style("display", "none")
             .text(name);
 
         imageElements[name].style("cursor", "pointer");
@@ -217,18 +218,53 @@ function renderStep(targetStep, duration = transitionDuration) {
         .ease(d3.easeLinear)
         .attr("width", targetX);
 
+    // Sort names by rank so highest rank is placed first (on the left)
+    const sortedNames = [...names].sort((a, b) => {
+        return chartData[currentStep].values[a].rank - chartData[currentStep].values[b].rank;
+    });
+
+    const placedAvatars = [];
+    const gap = 4;
+
     // Animate avatars and labels
-    names.forEach(name => {
+    sortedNames.forEach(name => {
         const val = chartData[currentStep].values[name].value;
         const rank = chartData[currentStep].values[name].rank;
         const targetY = yScale(val);
         const radius = getRankSize(rank);
 
+        let finalX = targetX;
+        let finalY = targetY;
+
+        let hasOverlap = true;
+        let loopGuard = 0;
+        while (hasOverlap && loopGuard < 100) {
+            hasOverlap = false;
+            loopGuard++;
+            for (let i = 0; i < placedAvatars.length; i++) {
+                const p = placedAvatars[i];
+                const dx = finalX - p.x;
+                const dy = finalY - p.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                const minDistance = radius + p.radius + gap;
+
+                if (distance < minDistance) {
+                    const neededX = p.x + Math.sqrt(minDistance * minDistance - dy * dy);
+                    if (neededX > finalX + 0.001) {
+                        finalX = neededX;
+                        hasOverlap = true;
+                    }
+                }
+            }
+        }
+
+        placedAvatars.push({ x: finalX, y: finalY, radius: radius });
+
         // Move group
         imageElements[name].transition()
             .duration(duration)
             .ease(d3.easeLinear)
-            .attr("transform", `translate(${targetX}, ${targetY})`);
+            .attr("transform", `translate(${finalX}, ${finalY})`);
 
         // Scale image and clip circle
         d3.select(`#clip-circle-${name} circle`).transition()
