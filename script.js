@@ -1,5 +1,4 @@
 // Globals for data
-const DYNAMIC_ZOOM = true;
 let participants;
 let timelineData;
 let chartData;
@@ -42,15 +41,16 @@ function processData(participants, timelineData) {
 
 // 2. Build the D3.js Chart (Dynamic Sizing)
 let width, height, innerWidth, innerHeight, xScale, yScale, svg, g, xAxisGroup, yAxisGroup, gridXGroup, gridYGroup, clipRect;
+let globalMinVal, globalMaxVal;
+let lineElements;
 let lineGenerator;
 let linesGroup, imagesGroup;
-let lineElements = {};
 let imageElements = {};
 let imageCircles = {};
 let labelElements = {};
-let globalMinVal, globalMaxVal;
 
 // Sizing configuration
+const DYNAMIC_ZOOM = true;
 const margin = { top: 60, right: 120, bottom: 60, left: 80 };
 const transitionDuration = 800; // slightly faster for hotkeys
 
@@ -93,8 +93,9 @@ function initChart() {
         .attr("width", 0) // starts at 0 width
         .attr("height", height);
 
+
     xScale = d3.scaleLinear()
-        .domain(DYNAMIC_ZOOM ? [0, 1] : [0, chartData.length - 1])
+        .domain([0, chartData.length - 1])
         .range([0, innerWidth]);
 
     globalMinVal = Infinity;
@@ -106,6 +107,8 @@ function initChart() {
             if (chartData[0].values[name].value < globalMinVal) globalMinVal = chartData[0].values[name].value;
             if (chartData[0].values[name].value > globalMaxVal) globalMaxVal = chartData[0].values[name].value;
         });
+
+        xScale.domain([0, 1]);
     } else {
         chartData.forEach(d => {
             names.forEach(name => {
@@ -118,6 +121,7 @@ function initChart() {
     yScale = d3.scaleLinear()
         .domain([globalMinVal - 10, globalMaxVal + 10])
         .range([innerHeight, 0]);
+
 
     // Axes & Grid
     xAxisGroup = g.append("g").attr("class", "x-axis").attr("transform", `translate(0,${innerHeight})`);
@@ -188,68 +192,87 @@ function initChart() {
     renderStep(0, 0); // Render initial state without animation duration
 }
 
+
+
 function updateAxes(duration = 0) {
-    // Generate valid ticks for the current X domain to avoid fractional ticks
     const xDomain = xScale.domain();
     const maxTick = Math.ceil(xDomain[1]);
     const tickValues = d3.range(0, maxTick + 1);
 
-    const xAxis = d3.axisBottom(xScale)
-        .tickValues(tickValues)
-        .tickFormat(i => chartData[i] ? chartData[i].timeLabel : "");
+    // Suppress D3's native text generation by returning empty string
+    const xAxis = d3.axisBottom(xScale).tickValues(tickValues).tickFormat('');
     const yAxis = d3.axisLeft(yScale);
 
-    // Transition axes and grid
-    const trans = d3.transition().duration(duration).ease(d3.easeLinear);
+    if (duration > 0) {
+        const trans = d3.transition().duration(duration).ease(d3.easeLinear);
 
-    gridXGroup.transition(trans).call(d3.axisBottom(xScale).tickValues(tickValues).tickSize(-innerHeight).tickFormat(''))
-        .on("end", function() { d3.select(this).selectAll(".tick line").classed("grid-line", true); });
-    gridYGroup.transition(trans).call(d3.axisLeft(yScale).tickSize(-innerWidth).tickFormat(''))
-        .on("end", function() { d3.select(this).selectAll(".tick line").classed("grid-line", true); });
+        gridXGroup.transition(trans).call(d3.axisBottom(xScale).tickValues(tickValues).tickSize(-innerHeight).tickFormat(''))
+            .selectAll(".tick line").attr("class", "grid-line");
+        gridYGroup.transition(trans).call(d3.axisLeft(yScale).tickSize(-innerWidth).tickFormat(''))
+            .selectAll(".tick line").attr("class", "grid-line");
 
-    xAxisGroup.transition(trans).call(xAxis)
-        .on("end", function() {
-            d3.select(this).selectAll("text").classed("axis-text", true);
+        xAxisGroup.transition(trans).call(xAxis);
 
-            // Handle line breaks \n in X axis labels
-            d3.select(this).selectAll(".tick text").each(function() {
-                const el = d3.select(this);
-                // Handle both actual newlines and escaped newlines
-                const textContent = el.text();
-                // Skip empty strings
-                if (!textContent) return;
+        yAxisGroup.transition(trans).call(yAxis)
+            .selectAll("text").attr("class", "axis-text");
 
-                // If it already has tspan, we need to extract original text
-                let rawText = textContent;
-                if (el.selectAll("tspan").size() > 0) {
-                   rawText = el.selectAll("tspan").nodes().map(n => d3.select(n).text()).join("\\n");
-                }
+        // Manage text manually on the ticks during transition
+        manageXAxisLabels(tickValues, duration);
 
-                const lines = rawText.includes("\\n") ? rawText.split("\\n") : rawText.split("\n");
-                if (lines.length > 1) {
-                    el.text(""); // Clear existing text
-                    lines.forEach((line, i) => {
-                        el.append("tspan")
-                          .attr("x", 0)
-                          .attr("y", 9)
-                          .attr("dy", `${i * 1.2}em`)
-                          .text(line);
-                    });
-                }
-            });
-        });
+    } else {
+        gridXGroup.call(d3.axisBottom(xScale).tickValues(tickValues).tickSize(-innerHeight).tickFormat(''))
+            .selectAll(".tick line").classed("grid-line", true);
+        gridYGroup.call(d3.axisLeft(yScale).tickSize(-innerWidth).tickFormat(''))
+            .selectAll(".tick line").classed("grid-line", true);
 
-    yAxisGroup.transition(trans).call(yAxis)
-        .on("end", function() { d3.select(this).selectAll("text").classed("axis-text", true); });
+        xAxisGroup.call(xAxis);
+
+        yAxisGroup.call(yAxis).selectAll("text").classed("axis-text", true);
+
+        manageXAxisLabels(tickValues, 0);
+    }
 
     g.selectAll(".domain").classed("axis-line", true);
+}
+
+function manageXAxisLabels(tickValues, duration) {
+    // Select all tick groups
+    const ticks = xAxisGroup.selectAll(".tick").data(tickValues, d => d);
+
+    // We add text elements manually if they don't exist
+    ticks.each(function(d) {
+        const tickGroup = d3.select(this);
+        let textEl = tickGroup.select("text.custom-axis-text");
+
+        if (textEl.empty()) {
+            textEl = tickGroup.append("text")
+                .attr("class", "custom-axis-text axis-text")
+                .attr("y", 9)
+                .attr("dy", "0.71em")
+                .style("text-anchor", "middle");
+
+            const rawLabel = chartData[d] ? chartData[d].timeLabel : "";
+            const lines = rawLabel.includes("\\n") ? rawLabel.split("\\n") : rawLabel.split("\n");
+
+            if (lines.length > 1) {
+                lines.forEach((line, i) => {
+                    textEl.append("tspan")
+                        .attr("x", 0)
+                        .attr("y", 9)
+                        .attr("dy", `${i * 1.2}em`)
+                        .text(line);
+                });
+            } else {
+                textEl.text(rawLabel);
+            }
+        }
+    });
 }
 
 function renderStep(targetStep, duration = transitionDuration) {
     currentStep = targetStep;
 
     if (DYNAMIC_ZOOM) {
-        // Find new max Y across all names for the current step
         let newMaxY = -Infinity;
         names.forEach(name => {
             if (chartData[currentStep].values[name].value > newMaxY) {
@@ -257,19 +280,15 @@ function renderStep(targetStep, duration = transitionDuration) {
             }
         });
 
-        // Update Y global max if necessary, or strictly follow current max for zoom out
         if (newMaxY > globalMaxVal) {
             globalMaxVal = newMaxY;
         }
 
-        // Update scales dynamically
         xScale.domain([0, Math.max(1, currentStep)]);
         yScale.domain([globalMinVal - 10, globalMaxVal + 10]);
 
-        // Transition the axes
         updateAxes(duration);
 
-        // Transition the lines to their new scales
         names.forEach(name => {
             const fullLineData = chartData.map((d, i) => ({ stepIndex: i, value: d.values[name].value }));
             lineElements[name].transition()
@@ -280,6 +299,7 @@ function renderStep(targetStep, duration = transitionDuration) {
     }
 
     const targetX = xScale(currentStep);
+
 
     // Animate the clip rect width to reveal the lines precisely
     clipRect.transition()
