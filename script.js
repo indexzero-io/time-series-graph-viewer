@@ -171,9 +171,15 @@ function initChart() {
             .attr("cx", 0)
             .attr("cy", 0);
 
+        const initialRadius = getRankSize(chartData[0].values[name].rank);
         imageCircles[name] = imageElements[name].append("image")
             .attr("href", participants[name].imageUrl)
-            .attr("clip-path", `url(#clip-circle-${safeId(name)})`);
+            .attr("clip-path", `url(#clip-circle-${safeId(name)})`)
+            .attr("x", -initialRadius)
+            .attr("y", -initialRadius)
+            .attr("width", initialRadius * 2)
+            .attr("height", initialRadius * 2)
+            .attr("preserveAspectRatio", "xMidYMid slice");
 
         imageBorders[name] = imageElements[name].append("circle")
             .attr("r", getRankSize(chartData[0].values[name].rank))
@@ -187,6 +193,7 @@ function initChart() {
             .attr("class", "participant-label")
             .style("fill", participants[name].color)
             .style("display", "none")
+            .style("text-anchor", "end")
             .text(name);
 
         imageElements[name].style("cursor", "pointer");
@@ -268,7 +275,7 @@ function manageXAxisLabels(tickValues, duration) {
     const ticks = xAxisGroup.selectAll(".tick").data(tickValues, d => d);
 
     // We add text elements manually if they don't exist
-    ticks.each(function (d) {
+    ticks.each(function(d) {
         const tickGroup = d3.select(this);
         let textEl = tickGroup.select("text.custom-axis-text");
 
@@ -313,7 +320,7 @@ function renderStep(targetStep, duration = transitionDuration) {
         }
 
         xScale.domain([0, Math.max(1, currentStep + 1)]);
-        yScale.domain([globalMinVal, globalMaxVal + 10]);
+        yScale.domain([globalMinVal - 10, globalMaxVal + 10]);
 
         updateAxes(duration);
 
@@ -402,7 +409,7 @@ function renderStep(targetStep, duration = transitionDuration) {
         // Move label and update text if visible
         labelElements[name].transition()
             .duration(duration)
-            .attr("x", radius + 8)
+            .attr("x", -(radius + 8))
             .attr("y", 5);
         if (labelElements[name].style("display") === "block") {
             labelElements[name].text(`${name}: ${val} pts`);
