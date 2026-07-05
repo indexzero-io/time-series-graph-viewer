@@ -108,8 +108,10 @@ function initChart() {
             if (chartData[0].values[name].value > globalMaxVal) globalMaxVal = chartData[0].values[name].value;
         });
 
-        xScale.domain([0, 1]);
+        xScale.domain([0, 1]); // Add right padding
     } else {
+        xScale.domain([0, chartData.length]); // Add right padding instead of chartData.length - 1
+
         chartData.forEach(d => {
             names.forEach(name => {
                 if (d.values[name].value < globalMinVal) globalMinVal = d.values[name].value;
@@ -170,6 +172,15 @@ function initChart() {
         imageCircles[name] = imageElements[name].append("image")
             .attr("href", participants[name].imageUrl)
             .attr("clip-path", `url(#clip-circle-${name})`);
+
+        imageElements[name].append("circle")
+            .attr("id", `avatar-border-${name}`)
+            .attr("r", getRankSize(chartData[0].values[name].rank))
+            .attr("cx", 0)
+            .attr("cy", 0)
+            .style("fill", "none")
+            .style("stroke", participants[name].color)
+            .style("stroke-width", 4);
 
         labelElements[name] = imageElements[name].append("text")
             .attr("class", "participant-label")
@@ -284,7 +295,7 @@ function renderStep(targetStep, duration = transitionDuration) {
             globalMaxVal = newMaxY;
         }
 
-        xScale.domain([0, Math.max(1, currentStep)]);
+        xScale.domain([0, Math.max(1, currentStep + 1)]);
         yScale.domain([globalMinVal - 10, globalMaxVal + 10]);
 
         updateAxes(duration);
@@ -357,6 +368,10 @@ function renderStep(targetStep, duration = transitionDuration) {
 
         // Scale image and clip circle
         d3.select(`#clip-circle-${name} circle`).transition()
+            .duration(duration)
+            .attr("r", radius);
+
+        d3.select(`#avatar-border-${name}`).transition()
             .duration(duration)
             .attr("r", radius);
 
