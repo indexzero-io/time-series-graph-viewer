@@ -367,6 +367,10 @@ function renderStep(targetStep, duration = transitionDuration) {
             loopGuard++;
             for (let i = 0; i < placedAvatars.length; i++) {
                 const p = placedAvatars[i];
+
+                // Only push to the right if the point values are EXACTLY the same
+                if (val !== p.val) continue;
+
                 const dx = finalX - p.x;
                 const dy = finalY - p.y;
                 const distance = Math.sqrt(dx * dx + dy * dy);
@@ -382,7 +386,7 @@ function renderStep(targetStep, duration = transitionDuration) {
             }
         }
 
-        placedAvatars.push({ x: finalX, y: finalY, radius: radius });
+        placedAvatars.push({ x: finalX, y: finalY, radius: radius, val: val });
 
         // Move group
         imageElements[name].transition()
@@ -391,7 +395,7 @@ function renderStep(targetStep, duration = transitionDuration) {
             .attr("transform", `translate(${finalX}, ${finalY})`);
 
         // Scale image and clip circle
-        d3.select(`#clip-circle-${name} circle`).transition()
+        d3.select(`#clip-circle-${safeId(name)} circle`).transition()
             .duration(duration)
             .attr("r", radius);
 
