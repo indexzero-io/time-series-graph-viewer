@@ -52,6 +52,7 @@ let imageBorders = {};
 
 // Sizing configuration
 const DYNAMIC_ZOOM = true;
+const FOCUS_WINDOW = true;
 const margin = { top: 60, right: 120, bottom: 60, left: 80 };
 const transitionDuration = 800; // slightly faster for hotkeys
 
@@ -103,17 +104,20 @@ function initChart() {
     globalMinVal = Infinity;
     globalMaxVal = -Infinity;
 
-    if (DYNAMIC_ZOOM) {
-        // Init with step 0 values
+    let initMinY = Infinity;
+    let initMaxY = -Infinity;
+
+    if (DYNAMIC_ZOOM || FOCUS_WINDOW) {
         names.forEach(name => {
-            if (chartData[0].values[name].value < globalMinVal) globalMinVal = chartData[0].values[name].value;
-            if (chartData[0].values[name].value > globalMaxVal) globalMaxVal = chartData[0].values[name].value;
+            const val = chartData[0].values[name].value;
+            if (val < globalMinVal) globalMinVal = val;
+            if (val > globalMaxVal) globalMaxVal = val;
+            if (val < initMinY) initMinY = val;
+            if (val > initMaxY) initMaxY = val;
         });
-
-        xScale.domain([0, 1]); // Add right padding
+        xScale.domain([0, 1]);
     } else {
-        xScale.domain([0, chartData.length]); // Add right padding instead of chartData.length - 1
-
+        xScale.domain([0, chartData.length]);
         chartData.forEach(d => {
             names.forEach(name => {
                 if (d.values[name].value < globalMinVal) globalMinVal = d.values[name].value;
@@ -122,9 +126,14 @@ function initChart() {
         });
     }
 
-    yScale = d3.scaleLinear()
-        .domain([0, globalMaxVal + 10])
-        .range([innerHeight, 0]);
+    yScale = d3.scaleLinear().range([innerHeight, 0]);
+    if (FOCUS_WINDOW) {
+        yScale.domain([Math.max(0, initMinY - 5), initMaxY + 5]);
+    } else if (DYNAMIC_ZOOM) {
+        yScale.domain([0, globalMaxVal + 10]);
+    } else {
+        yScale.domain([0, globalMaxVal + 10]);
+    }
 
 
     // Axes & Grid
@@ -307,20 +316,27 @@ function manageXAxisLabels(tickValues, duration) {
 function renderStep(targetStep, duration = transitionDuration) {
     currentStep = targetStep;
 
-    if (DYNAMIC_ZOOM) {
-        let newMaxY = -Infinity;
+    if (DYNAMIC_ZOOM || FOCUS_WINDOW) {
+        let currentStepMinY = Infinity;
+        let currentStepMaxY = -Infinity;
+
         names.forEach(name => {
-            if (chartData[currentStep].values[name].value > newMaxY) {
-                newMaxY = chartData[currentStep].values[name].value;
-            }
+            const val = chartData[currentStep].values[name].value;
+            if (val > currentStepMaxY) currentStepMaxY = val;
+            if (val < currentStepMinY) currentStepMinY = val;
         });
 
-        if (newMaxY > globalMaxVal) {
-            globalMaxVal = newMaxY;
+        if (currentStepMaxY > globalMaxVal) {
+            globalMaxVal = currentStepMaxY;
         }
 
         xScale.domain([0, Math.max(1, currentStep + 1)]);
-        yScale.domain([0, globalMaxVal + 10]);
+
+        if (FOCUS_WINDOW) {
+            yScale.domain([Math.max(0, currentStepMinY - 5), currentStepMaxY + 5]);
+        } else if (DYNAMIC_ZOOM) {
+            yScale.domain([0, globalMaxVal + 10]);
+        }
 
         updateAxes(duration);
 
