@@ -123,7 +123,7 @@ function initChart() {
     }
 
     yScale = d3.scaleLinear()
-        .domain([globalMinVal - 10, globalMaxVal + 10])
+        .domain([0, globalMaxVal + 10])
         .range([innerHeight, 0]);
 
 
@@ -320,7 +320,7 @@ function renderStep(targetStep, duration = transitionDuration) {
         }
 
         xScale.domain([0, Math.max(1, currentStep + 1)]);
-        yScale.domain([globalMinVal - 10, globalMaxVal + 10]);
+        yScale.domain([0, globalMaxVal + 10]);
 
         updateAxes(duration);
 
