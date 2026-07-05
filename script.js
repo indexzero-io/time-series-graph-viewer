@@ -215,7 +215,7 @@ function initChart() {
             // Bring label to front as well if it's separate, but it's appended to imageElements so raising imageElements raises it.
             // Let's add a background or stroke to the text so it's readable over other images, and maybe shift it slightly more.
             labelElements[name].style("display", "block")
-                .text(`${name}: ${chartData[currentStep].values[name].value} pts`)
+                .text(`${name}: ${chartData[Math.min(currentStep, chartData.length - 1)].values[name].value} pts`)
                 .style("text-shadow", "2px 2px 0 #121212, -1px -1px 0 #121212, 1px -1px 0 #121212, -1px 1px 0 #121212, 1px 1px 0 #121212")
                 .style("font-weight", "bold");
             lineElements[name].attr("stroke-width", 6);
@@ -315,13 +315,14 @@ function manageXAxisLabels(tickValues, duration) {
 
 function renderStep(targetStep, duration = transitionDuration) {
     currentStep = targetStep;
+    const dataStep = Math.min(currentStep, chartData.length - 1);
 
     if (DYNAMIC_ZOOM || FOCUS_WINDOW) {
         let currentStepMinY = Infinity;
         let currentStepMaxY = -Infinity;
 
         names.forEach(name => {
-            const val = chartData[currentStep].values[name].value;
+            const val = chartData[dataStep].values[name].value;
             if (val > currentStepMaxY) currentStepMaxY = val;
             if (val < currentStepMinY) currentStepMinY = val;
         });
@@ -330,9 +331,12 @@ function renderStep(targetStep, duration = transitionDuration) {
             globalMaxVal = currentStepMaxY;
         }
 
-        xScale.domain([0, Math.max(1, currentStep + 1)]);
+        xScale.domain([0, Math.max(1, dataStep + 1)]);
 
-        if (FOCUS_WINDOW) {
+        if (currentStep === chartData.length) {
+            // Final step: zoom out entirely
+            yScale.domain([0, globalMaxVal + 10]);
+        } else if (FOCUS_WINDOW) {
             yScale.domain([Math.max(0, currentStepMinY - 5), currentStepMaxY + 5]);
         } else if (DYNAMIC_ZOOM) {
             yScale.domain([0, globalMaxVal + 10]);
@@ -349,7 +353,7 @@ function renderStep(targetStep, duration = transitionDuration) {
         });
     }
 
-    const targetX = xScale(currentStep);
+    const targetX = xScale(dataStep);
 
 
     // Animate the clip rect width to reveal the lines precisely
@@ -360,7 +364,7 @@ function renderStep(targetStep, duration = transitionDuration) {
 
     // Sort names by rank so highest rank is placed first (on the left)
     const sortedNames = [...names].sort((a, b) => {
-        return chartData[currentStep].values[a].rank - chartData[currentStep].values[b].rank;
+        return chartData[dataStep].values[a].rank - chartData[dataStep].values[b].rank;
     });
 
     const placedAvatars = [];
@@ -368,8 +372,8 @@ function renderStep(targetStep, duration = transitionDuration) {
 
     // Animate avatars and labels
     sortedNames.forEach(name => {
-        const val = chartData[currentStep].values[name].value;
-        const rank = chartData[currentStep].values[name].rank;
+        const val = chartData[dataStep].values[name].value;
+        const rank = chartData[dataStep].values[name].rank;
         const targetY = yScale(val);
         const radius = getRankSize(rank);
 
@@ -437,13 +441,13 @@ function renderStep(targetStep, duration = transitionDuration) {
     });
 
     // Auto stop if reached end
-    if (currentStep >= chartData.length - 1 && isPlaying) {
+    if (currentStep >= chartData.length && isPlaying) {
         stopAnimation();
     }
 }
 
 function playNextStep() {
-    if (currentStep < chartData.length - 1) {
+    if (currentStep < chartData.length) {
         renderStep(currentStep + 1);
         animationTimeout = setTimeout(playNextStep, transitionDuration);
     } else {
@@ -452,7 +456,7 @@ function playNextStep() {
 }
 
 function startAnimation() {
-    if (currentStep >= chartData.length - 1) {
+    if (currentStep >= chartData.length) {
         renderStep(0, 0); // instantly reset
     }
     isPlaying = true;
@@ -482,7 +486,7 @@ window.addEventListener("keydown", (e) => {
 
         if (e.key === "ArrowLeft" && currentStep > 0) {
             renderStep(currentStep - 1, transitionDuration / 2); // faster manual stepping
-        } else if (e.key === "ArrowRight" && currentStep < chartData.length - 1) {
+        } else if (e.key === "ArrowRight" && currentStep < chartData.length) {
             renderStep(currentStep + 1, transitionDuration / 2);
         }
     }
