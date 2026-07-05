@@ -268,7 +268,7 @@ function manageXAxisLabels(tickValues, duration) {
     const ticks = xAxisGroup.selectAll(".tick").data(tickValues, d => d);
 
     // We add text elements manually if they don't exist
-    ticks.each(function(d) {
+    ticks.each(function (d) {
         const tickGroup = d3.select(this);
         let textEl = tickGroup.select("text.custom-axis-text");
 
@@ -313,7 +313,7 @@ function renderStep(targetStep, duration = transitionDuration) {
         }
 
         xScale.domain([0, Math.max(1, currentStep + 1)]);
-        yScale.domain([globalMinVal - 10, globalMaxVal + 10]);
+        yScale.domain([globalMinVal, globalMaxVal + 10]);
 
         updateAxes(duration);
 
