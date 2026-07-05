@@ -48,6 +48,7 @@ let linesGroup, imagesGroup;
 let imageElements = {};
 let imageCircles = {};
 let labelElements = {};
+let imageBorders = {};
 
 // Sizing configuration
 const DYNAMIC_ZOOM = true;
@@ -67,6 +68,7 @@ const getRankSize = (rank) => {
     return 14;                 // default radius
 };
 
+const safeId = (name) => name.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '');
 function initChart() {
     d3.select("#chart-container").selectAll("*").remove();
 
@@ -162,7 +164,7 @@ function initChart() {
 
         // Define clip path for circular avatar
         defs.append("clipPath")
-            .attr("id", `clip-circle-${name}`)
+            .attr("id", `clip-circle-${safeId(name)}`)
             .append("circle")
             .attr("class", "avatar-clip")
             .attr("r", getRankSize(chartData[0].values[name].rank))
@@ -171,10 +173,9 @@ function initChart() {
 
         imageCircles[name] = imageElements[name].append("image")
             .attr("href", participants[name].imageUrl)
-            .attr("clip-path", `url(#clip-circle-${name})`);
+            .attr("clip-path", `url(#clip-circle-${safeId(name)})`);
 
-        imageElements[name].append("circle")
-            .attr("id", `avatar-border-${name}`)
+        imageBorders[name] = imageElements[name].append("circle")
             .attr("r", getRankSize(chartData[0].values[name].rank))
             .attr("cx", 0)
             .attr("cy", 0)
@@ -371,7 +372,7 @@ function renderStep(targetStep, duration = transitionDuration) {
             .duration(duration)
             .attr("r", radius);
 
-        d3.select(`#avatar-border-${name}`).transition()
+        imageBorders[name].transition()
             .duration(duration)
             .attr("r", radius);
 
