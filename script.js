@@ -191,14 +191,30 @@ function initChart() {
 
         imageElements[name].style("cursor", "pointer");
 
-        // Hover interactivity to bring line and image to front
-        const bringToFront = () => {
+        // Hover interactivity to bring line and image to front and show label
+        const handleMouseOver = () => {
             lineElements[name].raise();
             imageElements[name].raise();
+
+            // Bring label to front as well if it's separate, but it's appended to imageElements so raising imageElements raises it.
+            // Let's add a background or stroke to the text so it's readable over other images, and maybe shift it slightly more.
+            labelElements[name].style("display", "block")
+                .text(`${name}: ${chartData[currentStep].values[name].value} pts`)
+                .style("text-shadow", "2px 2px 0 #121212, -1px -1px 0 #121212, 1px -1px 0 #121212, -1px 1px 0 #121212, 1px 1px 0 #121212")
+                .style("font-weight", "bold");
+            lineElements[name].attr("stroke-width", 6);
         };
 
-        lineElements[name].on("mouseover", bringToFront);
-        imageElements[name].on("mouseover", bringToFront);
+        const handleMouseOut = () => {
+            labelElements[name].style("display", "none");
+            lineElements[name].attr("stroke-width", null);
+        };
+
+        lineElements[name].on("mouseover", handleMouseOver);
+        imageElements[name].on("mouseover", handleMouseOver);
+
+        lineElements[name].on("mouseout", handleMouseOut);
+        imageElements[name].on("mouseout", handleMouseOut);
     });
 
     renderStep(0, 0); // Render initial state without animation duration
@@ -383,11 +399,14 @@ function renderStep(targetStep, duration = transitionDuration) {
             .attr("width", radius * 2)
             .attr("height", radius * 2);
 
-        // Move label
+        // Move label and update text if visible
         labelElements[name].transition()
             .duration(duration)
             .attr("x", radius + 8)
             .attr("y", 5);
+        if (labelElements[name].style("display") === "block") {
+            labelElements[name].text(`${name}: ${val} pts`);
+        }
     });
 
     // Auto stop if reached end
