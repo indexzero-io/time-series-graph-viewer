@@ -1,0 +1,212 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #121212;
+    color: #e0e0e0;
+    margin: 0;
+    padding: 20px;
+}
+
+.config-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: #1e1e1e;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+}
+
+h1 {
+    margin-top: 0;
+    color: #fff;
+}
+
+.actions {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+button {
+    background-color: #333;
+    color: #fff;
+    border: 1px solid #444;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+
+button:hover {
+    background-color: #444;
+}
+
+button.primary-btn {
+    background-color: #007bff;
+    border-color: #0056b3;
+    font-weight: bold;
+}
+
+button.primary-btn:hover {
+    background-color: #0056b3;
+}
+
+.tabs {
+    display: flex;
+    border-bottom: 1px solid #333;
+    margin-bottom: 20px;
+}
+
+.tab-btn {
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    padding: 10px 20px;
+    font-size: 16px;
+    color: #a0a0a0;
+}
+
+.tab-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.tab-btn.active {
+    color: #fff;
+    border-bottom-color: #007bff;
+}
+
+.tab-content {
+    min-height: 500px;
+}
+
+.tab-pane {
+    display: none;
+}
+
+.tab-pane.active {
+    display: block;
+}
+
+/* Table View Styles */
+.table-controls {
+    margin-bottom: 15px;
+    display: flex;
+    gap: 10px;
+}
+
+.table-wrapper {
+    overflow-x: auto;
+    border: 1px solid #333;
+    border-radius: 4px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    border: 1px solid #333;
+    padding: 0;
+    min-width: 100px;
+    height: 36px;
+}
+
+th {
+    background-color: #252525;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+th.sticky-col, td.sticky-col {
+    position: sticky;
+    left: 0;
+    background-color: #252525;
+    z-index: 20;
+    min-width: 150px;
+}
+
+th.sticky-col {
+    z-index: 30; /* Keep top left corner above both sticky row and col */
+}
+
+input[type="text"], input[type="number"] {
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    background: transparent;
+    border: none;
+    color: #fff;
+    padding: 8px;
+    font-family: inherit;
+    font-size: 14px;
+}
+
+input[type="text"]:focus, input[type="number"]:focus {
+    outline: 2px solid #007bff;
+    outline-offset: -2px;
+    background-color: #2a2a2a;
+}
+
+.delete-btn {
+    background: transparent;
+    border: none;
+    color: #ff4444;
+    padding: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+.delete-btn:hover {
+    background-color: rgba(255, 68, 68, 0.1);
+}
+
+.header-container {
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+
+.header-container input {
+    flex-grow: 1;
+}
+
+.header-container .delete-btn {
+    width: auto;
+    padding: 8px;
+}
+
+
+/* JSON View Styles */
+#json-editor {
+    width: 100%;
+    height: 500px;
+    background: #1e1e1e;
+    color: #d4d4d4;
+    border: 1px solid #333;
+    border-radius: 4px;
+    padding: 15px;
+    font-family: 'Consolas', 'Courier New', Courier, monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    box-sizing: border-box;
+    resize: vertical;
+}
+
+#json-editor:focus {
+    outline: none;
+    border-color: #007bff;
+}
+
+.error-msg {
+    color: #ff4444;
+    margin-top: 10px;
+    font-size: 14px;
+    min-height: 20px;
+}

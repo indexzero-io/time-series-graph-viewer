@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configure Chart Data</title>
+    <link rel="stylesheet" href="config.css">
+    <!-- Include LZString for URL compression -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
+</head>
+<body>
+    <div class="config-container">
+        <h1>Configure Chart Data</h1>
+        <div class="actions">
+            <button id="save-btn" class="primary-btn">Save and View Graph</button>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="table-view">Table View</button>
+            <button class="tab-btn" data-tab="json-view">JSON View</button>
+        </div>
+
+        <div class="tab-content">
+            <div id="table-view" class="tab-pane active">
+                <div class="table-controls">
+                    <button id="add-row-btn">Add Row (Timestep)</button>
+                    <button id="add-col-btn">Add Column (Participant)</button>
+                </div>
+                <div class="table-wrapper">
+                    <table id="data-table">
+                        <thead>
+                            <!-- Headers dynamically generated -->
+                        </thead>
+                        <tbody>
+                            <!-- Rows dynamically generated -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="json-view" class="tab-pane">
+                <textarea id="json-editor" spellcheck="false"></textarea>
+                <div id="json-error" class="error-msg"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Using the default data as a starting point -->
+    <script src="data.js"></script>
+    <script src="config.js"></script>
+</body>
+</html>
