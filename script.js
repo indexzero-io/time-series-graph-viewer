@@ -41,13 +41,18 @@ function processData(participants, timelineData) {
 
 // 2. Build the D3.js Chart (Dynamic Sizing)
 let width, height, innerWidth, innerHeight, xScale, yScale, svg, g, xAxisGroup, yAxisGroup, gridXGroup, gridYGroup, clipRect;
+let globalMinVal, globalMaxVal;
+let lineElements;
 let lineGenerator;
 let linesGroup, imagesGroup;
 let imageElements = {};
 let imageCircles = {};
 let labelElements = {};
+let imageBorders = {};
 
 // Sizing configuration
+const DYNAMIC_ZOOM = true;
+const FOCUS_WINDOW = true;
 const margin = { top: 60, right: 120, bottom: 60, left: 80 };
 const transitionDuration = 800; // slightly faster for hotkeys
 
@@ -64,6 +69,7 @@ const getRankSize = (rank) => {
     return 14;                 // default radius
 };
 
+const safeId = (name) => name.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '');
 function initChart() {
     d3.select("#chart-container").selectAll("*").remove();
 
@@ -90,21 +96,45 @@ function initChart() {
         .attr("width", 0) // starts at 0 width
         .attr("height", height);
 
+
     xScale = d3.scaleLinear()
         .domain([0, chartData.length - 1])
         .range([0, innerWidth]);
 
-    let minVal = Infinity, maxVal = -Infinity;
-    chartData.forEach(d => {
-        names.forEach(name => {
-            if (d.values[name].value < minVal) minVal = d.values[name].value;
-            if (d.values[name].value > maxVal) maxVal = d.values[name].value;
-        });
-    });
+    globalMinVal = Infinity;
+    globalMaxVal = -Infinity;
 
-    yScale = d3.scaleLinear()
-        .domain([minVal - 10, maxVal + 10])
-        .range([innerHeight, 0]);
+    let initMinY = Infinity;
+    let initMaxY = -Infinity;
+
+    if (DYNAMIC_ZOOM || FOCUS_WINDOW) {
+        names.forEach(name => {
+            const val = chartData[0].values[name].value;
+            if (val < globalMinVal) globalMinVal = val;
+            if (val > globalMaxVal) globalMaxVal = val;
+            if (val < initMinY) initMinY = val;
+            if (val > initMaxY) initMaxY = val;
+        });
+        xScale.domain([0, 1]);
+    } else {
+        xScale.domain([0, chartData.length]);
+        chartData.forEach(d => {
+            names.forEach(name => {
+                if (d.values[name].value < globalMinVal) globalMinVal = d.values[name].value;
+                if (d.values[name].value > globalMaxVal) globalMaxVal = d.values[name].value;
+            });
+        });
+    }
+
+    yScale = d3.scaleLinear().range([innerHeight, 0]);
+    if (FOCUS_WINDOW) {
+        yScale.domain([Math.max(0, initMinY - 5), initMaxY + 5]);
+    } else if (DYNAMIC_ZOOM) {
+        yScale.domain([0, globalMaxVal + 10]);
+    } else {
+        yScale.domain([0, globalMaxVal + 10]);
+    }
+
 
     // Axes & Grid
     xAxisGroup = g.append("g").attr("class", "x-axis").attr("transform", `translate(0,${innerHeight})`);
@@ -123,15 +153,18 @@ function initChart() {
     linesGroup = g.append("g").attr("clip-path", "url(#clip-lines)");
     imagesGroup = g.append("g");
 
+    lineElements = {};
+
     // Draw full lines once
     names.forEach(name => {
         const fullLineData = chartData.map((d, i) => ({ stepIndex: i, value: d.values[name].value }));
 
-        linesGroup.append("path")
+        lineElements[name] = linesGroup.append("path")
             .datum(fullLineData)
             .attr("class", "line")
             .attr("stroke", participants[name].color)
-            .attr("d", lineGenerator);
+            .attr("d", lineGenerator)
+            .style("cursor", "pointer");
     });
 
     // Setup images
@@ -140,43 +173,188 @@ function initChart() {
 
         // Define clip path for circular avatar
         defs.append("clipPath")
-            .attr("id", `clip-circle-${name}`)
+            .attr("id", `clip-circle-${safeId(name)}`)
             .append("circle")
             .attr("class", "avatar-clip")
             .attr("r", getRankSize(chartData[0].values[name].rank))
             .attr("cx", 0)
             .attr("cy", 0);
 
+        const initialRadius = getRankSize(chartData[0].values[name].rank);
         imageCircles[name] = imageElements[name].append("image")
             .attr("href", participants[name].imageUrl)
-            .attr("clip-path", `url(#clip-circle-${name})`);
+            .attr("clip-path", `url(#clip-circle-${safeId(name)})`)
+            .attr("x", -initialRadius)
+            .attr("y", -initialRadius)
+            .attr("width", initialRadius * 2)
+            .attr("height", initialRadius * 2)
+            .attr("preserveAspectRatio", "xMidYMid slice");
+
+        imageBorders[name] = imageElements[name].append("circle")
+            .attr("r", getRankSize(chartData[0].values[name].rank))
+            .attr("cx", 0)
+            .attr("cy", 0)
+            .style("fill", "none")
+            .style("stroke", participants[name].color)
+            .style("stroke-width", 4);
 
         labelElements[name] = imageElements[name].append("text")
             .attr("class", "participant-label")
             .style("fill", participants[name].color)
+            .style("display", "none")
+            .style("text-anchor", "end")
             .text(name);
+
+        imageElements[name].style("cursor", "pointer");
+
+        // Hover interactivity to bring line and image to front and show label
+        const handleMouseOver = () => {
+            lineElements[name].raise();
+            imageElements[name].raise();
+
+            // Bring label to front as well if it's separate, but it's appended to imageElements so raising imageElements raises it.
+            // Let's add a background or stroke to the text so it's readable over other images, and maybe shift it slightly more.
+            labelElements[name].style("display", "block")
+                .text(`${name}: ${chartData[Math.min(currentStep, chartData.length - 1)].values[name].value} pts`)
+                .style("text-shadow", "2px 2px 0 #121212, -1px -1px 0 #121212, 1px -1px 0 #121212, -1px 1px 0 #121212, 1px 1px 0 #121212")
+                .style("font-weight", "bold");
+            lineElements[name].attr("stroke-width", 6);
+        };
+
+        const handleMouseOut = () => {
+            labelElements[name].style("display", "none");
+            lineElements[name].attr("stroke-width", null);
+        };
+
+        lineElements[name].on("mouseover", handleMouseOver);
+        imageElements[name].on("mouseover", handleMouseOver);
+
+        lineElements[name].on("mouseout", handleMouseOut);
+        imageElements[name].on("mouseout", handleMouseOut);
     });
 
     renderStep(0, 0); // Render initial state without animation duration
 }
 
-function updateAxes() {
-    const xAxis = d3.axisBottom(xScale).ticks(chartData.length).tickFormat(i => chartData[i] ? chartData[i].timeLabel : "");
+
+
+function updateAxes(duration = 0) {
+    const xDomain = xScale.domain();
+    const maxTick = Math.ceil(xDomain[1]);
+    const tickValues = d3.range(0, maxTick + 1);
+
+    // Suppress D3's native text generation by returning empty string
+    const xAxis = d3.axisBottom(xScale).tickValues(tickValues).tickFormat('');
     const yAxis = d3.axisLeft(yScale);
 
-    gridXGroup.call(d3.axisBottom(xScale).ticks(chartData.length).tickSize(-innerHeight).tickFormat(''))
-        .selectAll(".tick line").classed("grid-line", true);
-    gridYGroup.call(d3.axisLeft(yScale).tickSize(-innerWidth).tickFormat(''))
-        .selectAll(".tick line").classed("grid-line", true);
+    if (duration > 0) {
+        const trans = d3.transition().duration(duration).ease(d3.easeLinear);
 
-    xAxisGroup.call(xAxis).selectAll("text").classed("axis-text", true);
-    yAxisGroup.call(yAxis).selectAll("text").classed("axis-text", true);
+        gridXGroup.transition(trans).call(d3.axisBottom(xScale).tickValues(tickValues).tickSize(-innerHeight).tickFormat(''))
+            .selectAll(".tick line").attr("class", "grid-line");
+        gridYGroup.transition(trans).call(d3.axisLeft(yScale).tickSize(-innerWidth).tickFormat(''))
+            .selectAll(".tick line").attr("class", "grid-line");
+
+        xAxisGroup.transition(trans).call(xAxis);
+
+        yAxisGroup.transition(trans).call(yAxis)
+            .selectAll("text").attr("class", "axis-text");
+
+        // Manage text manually on the ticks during transition
+        manageXAxisLabels(tickValues, duration);
+
+    } else {
+        gridXGroup.call(d3.axisBottom(xScale).tickValues(tickValues).tickSize(-innerHeight).tickFormat(''))
+            .selectAll(".tick line").classed("grid-line", true);
+        gridYGroup.call(d3.axisLeft(yScale).tickSize(-innerWidth).tickFormat(''))
+            .selectAll(".tick line").classed("grid-line", true);
+
+        xAxisGroup.call(xAxis);
+
+        yAxisGroup.call(yAxis).selectAll("text").classed("axis-text", true);
+
+        manageXAxisLabels(tickValues, 0);
+    }
+
     g.selectAll(".domain").classed("axis-line", true);
+}
+
+function manageXAxisLabels(tickValues, duration) {
+    // Select all tick groups
+    const ticks = xAxisGroup.selectAll(".tick").data(tickValues, d => d);
+
+    // We add text elements manually if they don't exist
+    ticks.each(function(d) {
+        const tickGroup = d3.select(this);
+        let textEl = tickGroup.select("text.custom-axis-text");
+
+        if (textEl.empty()) {
+            textEl = tickGroup.append("text")
+                .attr("class", "custom-axis-text axis-text")
+                .attr("y", 9)
+                .attr("dy", "0.71em")
+                .style("text-anchor", "middle");
+
+            const rawLabel = chartData[d] ? chartData[d].timeLabel : "";
+            const lines = rawLabel.includes("\\n") ? rawLabel.split("\\n") : rawLabel.split("\n");
+
+            if (lines.length > 1) {
+                lines.forEach((line, i) => {
+                    textEl.append("tspan")
+                        .attr("x", 0)
+                        .attr("y", 9)
+                        .attr("dy", `${i * 1.2}em`)
+                        .text(line);
+                });
+            } else {
+                textEl.text(rawLabel);
+            }
+        }
+    });
 }
 
 function renderStep(targetStep, duration = transitionDuration) {
     currentStep = targetStep;
-    const targetX = xScale(currentStep);
+    const dataStep = Math.min(currentStep, chartData.length - 1);
+
+    if (DYNAMIC_ZOOM || FOCUS_WINDOW) {
+        let currentStepMinY = Infinity;
+        let currentStepMaxY = -Infinity;
+
+        names.forEach(name => {
+            const val = chartData[dataStep].values[name].value;
+            if (val > currentStepMaxY) currentStepMaxY = val;
+            if (val < currentStepMinY) currentStepMinY = val;
+        });
+
+        if (currentStepMaxY > globalMaxVal) {
+            globalMaxVal = currentStepMaxY;
+        }
+
+        xScale.domain([0, Math.max(1, dataStep + 1)]);
+
+        if (currentStep === chartData.length) {
+            // Final step: zoom out entirely
+            yScale.domain([0, globalMaxVal + 10]);
+        } else if (FOCUS_WINDOW) {
+            yScale.domain([Math.max(0, currentStepMinY - 5), currentStepMaxY + 5]);
+        } else if (DYNAMIC_ZOOM) {
+            yScale.domain([0, globalMaxVal + 10]);
+        }
+
+        updateAxes(duration);
+
+        names.forEach(name => {
+            const fullLineData = chartData.map((d, i) => ({ stepIndex: i, value: d.values[name].value }));
+            lineElements[name].transition()
+                .duration(duration)
+                .ease(d3.easeLinear)
+                .attr("d", lineGenerator(fullLineData));
+        });
+    }
+
+    const targetX = xScale(dataStep);
+
 
     // Animate the clip rect width to reveal the lines precisely
     clipRect.transition()
@@ -184,21 +362,64 @@ function renderStep(targetStep, duration = transitionDuration) {
         .ease(d3.easeLinear)
         .attr("width", targetX);
 
+    // Sort names by rank so highest rank is placed first (on the left)
+    const sortedNames = [...names].sort((a, b) => {
+        return chartData[dataStep].values[a].rank - chartData[dataStep].values[b].rank;
+    });
+
+    const placedAvatars = [];
+    const gap = 4;
+
     // Animate avatars and labels
-    names.forEach(name => {
-        const val = chartData[currentStep].values[name].value;
-        const rank = chartData[currentStep].values[name].rank;
+    sortedNames.forEach(name => {
+        const val = chartData[dataStep].values[name].value;
+        const rank = chartData[dataStep].values[name].rank;
         const targetY = yScale(val);
         const radius = getRankSize(rank);
+
+        let finalX = targetX;
+        let finalY = targetY;
+
+        let hasOverlap = true;
+        let loopGuard = 0;
+        while (hasOverlap && loopGuard < 100) {
+            hasOverlap = false;
+            loopGuard++;
+            for (let i = 0; i < placedAvatars.length; i++) {
+                const p = placedAvatars[i];
+
+                // Only push to the right if the point values are EXACTLY the same
+                if (val !== p.val) continue;
+
+                const dx = finalX - p.x;
+                const dy = finalY - p.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                const minDistance = radius + p.radius + gap;
+
+                if (distance < minDistance) {
+                    const neededX = p.x + Math.sqrt(minDistance * minDistance - dy * dy);
+                    if (neededX > finalX + 0.001) {
+                        finalX = neededX;
+                        hasOverlap = true;
+                    }
+                }
+            }
+        }
+
+        placedAvatars.push({ x: finalX, y: finalY, radius: radius, val: val });
 
         // Move group
         imageElements[name].transition()
             .duration(duration)
             .ease(d3.easeLinear)
-            .attr("transform", `translate(${targetX}, ${targetY})`);
+            .attr("transform", `translate(${finalX}, ${finalY})`);
 
         // Scale image and clip circle
-        d3.select(`#clip-circle-${name} circle`).transition()
+        d3.select(`#clip-circle-${safeId(name)} circle`).transition()
+            .duration(duration)
+            .attr("r", radius);
+
+        imageBorders[name].transition()
             .duration(duration)
             .attr("r", radius);
 
@@ -209,21 +430,24 @@ function renderStep(targetStep, duration = transitionDuration) {
             .attr("width", radius * 2)
             .attr("height", radius * 2);
 
-        // Move label
+        // Move label and update text if visible
         labelElements[name].transition()
             .duration(duration)
-            .attr("x", radius + 8)
+            .attr("x", -(radius + 8))
             .attr("y", 5);
+        if (labelElements[name].style("display") === "block") {
+            labelElements[name].text(`${name}: ${val} pts`);
+        }
     });
 
     // Auto stop if reached end
-    if (currentStep >= chartData.length - 1 && isPlaying) {
+    if (currentStep >= chartData.length && isPlaying) {
         stopAnimation();
     }
 }
 
 function playNextStep() {
-    if (currentStep < chartData.length - 1) {
+    if (currentStep < chartData.length) {
         renderStep(currentStep + 1);
         animationTimeout = setTimeout(playNextStep, transitionDuration);
     } else {
@@ -232,7 +456,7 @@ function playNextStep() {
 }
 
 function startAnimation() {
-    if (currentStep >= chartData.length - 1) {
+    if (currentStep >= chartData.length) {
         renderStep(0, 0); // instantly reset
     }
     isPlaying = true;
@@ -262,7 +486,7 @@ window.addEventListener("keydown", (e) => {
 
         if (e.key === "ArrowLeft" && currentStep > 0) {
             renderStep(currentStep - 1, transitionDuration / 2); // faster manual stepping
-        } else if (e.key === "ArrowRight" && currentStep < chartData.length - 1) {
+        } else if (e.key === "ArrowRight" && currentStep < chartData.length) {
             renderStep(currentStep + 1, transitionDuration / 2);
         }
     }
