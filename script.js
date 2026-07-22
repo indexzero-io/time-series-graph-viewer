@@ -503,8 +503,27 @@ window.addEventListener("resize", () => {
 
 // Initialize on load
 function loadDataAndInit() {
-    participants = chartDataConfig.participants;
-    timelineData = chartDataConfig.timelineData;
+    let configData = chartDataConfig;
+
+    // Check URL parameters for data
+    const urlParams = new URLSearchParams(window.location.search);
+    const encodedData = urlParams.get('data');
+    if (encodedData) {
+        try {
+            const decompressed = LZString.decompressFromEncodedURIComponent(encodedData);
+            if (decompressed) {
+                configData = JSON.parse(decompressed);
+                console.log("Loaded data from URL");
+            } else {
+                console.warn("Failed to decompress URL data. Using default data.");
+            }
+        } catch (e) {
+            console.error("Error parsing URL data, falling back to default:", e);
+        }
+    }
+
+    participants = configData.participants;
+    timelineData = configData.timelineData;
 
     chartData = processData(participants, timelineData);
     names = Object.keys(participants);
